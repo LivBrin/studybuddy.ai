@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Generate ${safeCount} exactly ${count} study question${count === 1 ? '' : 's'} from the following source material. Mix multiple choice and short answer when count > 1.\n\n--- SOURCE ---\n${trimmed}\n--- END SOURCE ---`,
+          content: `Generate exactly ${count} study question${count === 1 ? '' : 's'} from the following source material. Mix multiple choice and short answer when count > 1.\n\n--- SOURCE ---\n${trimmed}\n--- END SOURCE ---`,
         },
       ],
       response_format: {
