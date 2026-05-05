@@ -8,22 +8,79 @@ export default function Home() {
   const [questionCount, setQuestionCount] = useState(5);
   const [loading, setLoading] = useState(false);
 
-  const handleGenerate = async () => {
-    setLoading(true);
+ const handleGenerate = async () => {
+  console.log("🚀 Generate clicked");
 
-    try {
-      let finalText = text;
+  setLoading(true);
 
-      // ✅ If user uploaded a file → extract text first
-      if (file) {
-        const formData = new FormData();
-        formData.append('file', file);
+  try {
+    let finalText = text;
 
-        const extractRes = await fetch('/api/extract', {
-          method: 'POST',
-          body: formData,
-        });
+    // 📄 Extract file if present
+    if (file) {
+      console.log("📄 Extracting file...");
 
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const extractRes = await fetch('/api/extract', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const extractData = await extractRes.json();
+
+      console.log("Extract response:", extractData);
+
+      if (!extractRes.ok) {
+        throw new Error(extractData.error || 'Extract failed');
+      }
+
+      finalText = extractData.text;
+    }
+
+    if (!finalText.trim()) {
+      alert('Please enter text or upload a file');
+      setLoading(false);
+      return;
+    }
+
+    console.log("🧠 Generating quiz...");
+
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: finalText,
+        questionCount,
+      }),
+    });
+
+    const data = await res.json();
+
+    console.log("Generate response:", data);
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Generation failed');
+    }
+
+    // ✅ ONLY redirect if we actually got questions
+    if (!data || !data.questions) {
+      throw new Error("No questions returned");
+    }
+
+    sessionStorage.setItem('quiz', JSON.stringify(data));
+
+    console.log("✅ Redirecting...");
+    window.location.href = '/quiz';
+
+  } catch (err) {
+    console.error("❌ ERROR:", err);
+    alert('Something went wrong. Check console.');
+  } finally {
+    setLoading(false);
+  }
+};
         const extractData = await extractRes.json();
 
         if (!extractRes.ok) {
