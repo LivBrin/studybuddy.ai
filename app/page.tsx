@@ -1,137 +1,194 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Sparkles, Upload, FileText, Loader2 } from 'lucide-react';
+import { setCurrent } from '@/lib/storage';
+import type { Quiz } from '@/lib/types';
+
+const QUESTION_OPTIONS = [3, 5, 10, 15, 20];
 
 export default function Home() {
+  const router = useRouter();
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [questionCount, setQuestionCount] = useState(5);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleGenerate = async () => {
-    console.log('🚀 Generate clicked');
+  async function handleGenerate() {
+    setError(null);
     setLoading(true);
 
     try {
       let finalText = text;
 
-      // 📄 Extract text from file if uploaded
       if (file) {
-        console.log('📄 Extracting file...');
-
         const formData = new FormData();
         formData.append('file', file);
 
-        const extractRes = await fetch('/api/extract', {
-          method: 'POST',
-          body: formData,
-        });
-
+        const extractRes = await fetch('/api/extract', { method: 'POST', body: formData });
         const extractData = await extractRes.json();
-        console.log('Extract response:', extractData);
-
-        if (!extractRes.ok) {
-          throw new Error(extractData.error || 'Failed to extract file');
-        }
-
+        if (!extractRes.ok) throw new Error(extractData.error || 'Failed to extract file');
         finalText = extractData.text;
       }
 
-      // ❗ Prevent empty input
       if (!finalText.trim()) {
-        alert('Please enter text or upload a file');
+        setError('Please paste some text or upload a file.');
         return;
       }
-
-      console.log('🧠 Generating quiz...');
 
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text: finalText,
-          questionCount,
-        }),
+        body: JSON.stringify({ text: finalText, count: questionCount }),
       });
 
       const data = await res.json();
-      console.log('Generate response:', data);
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to generate quiz');
-      }
-
-      if (!data || !data.questions) {
+      if (!res.ok) throw new Error(data.error || 'Failed to generate quiz');
+      if (!Array.isArray(data?.questions) || data.questions.length === 0) {
         throw new Error('No questions returned');
       }
 
-      sessionStorage.setItem('quiz', JSON.stringify(data));
+      const quiz: Quiz = {
+        id: crypto.randomUUID(),
+        title: file?.name ?? `Quiz · ${new Date().toLocaleString()}`,
+        createdAt: Date.now(),
+        questions: data.questions,
+      };
 
-      console.log('✅ Redirecting...');
-      window.location.href = '/quiz';
-    } catch (err) {
-      console.error('❌ ERROR:', err);
-      alert('Something went wrong. Check console.');
+      setCurrent(quiz);
+      router.push('/quiz');
+    } catch (err: any) {
+      console.error(err);
+      setError(err?.message ?? 'Something went wrong.');
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  const canSubmit = !loading && (text.trim().length > 0 || !!file);
 
   return (
-    <main className="p-6 max-w-xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">StudyBuddy</h1>
+    <main className="container max-w-2xl py-12">
+      <header className="mb-8 text-center">
+        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
+          <Sparkles className="h-3.5 w-3.5" /> AI-powered study quizzes
+        </div>
+        <h1 className="text-4xl font-bold tracking-tight">StudyBuddy</h1>
+        <p className="text-muted-foreground mt-2">
+          Drop in your notes or a document, and we&apos;ll quiz you on it.
+        </p>
+      </header>
 
-      {/* Text input */}
-      <textarea
-        className="w-full border p-2 rounded mb-4"
-        rows={8}
-        placeholder="Paste your notes here..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Create a quiz</CardTitle>
+          <CardDescription>Paste your notes or upload a PDF, DOCX, or TXT file.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="notes">Your notes</Label>
+            <Textarea
+              id="notes"
+              rows={8}
+              placeholder="Paste your notes, lecture transcript, or any source material here…"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              disabled={loading}
+            />
+          </div>
 
-      {/* File upload */}
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">
-          Or upload a PDF / DOCX / TXT
-        </label>
-        <input
-          type="file"
-          accept=".pdf,.docx,.txt"
-          onChange={(e) => setFile(e.target.files?.[0] || null)}
-        />
-        {file && (
-          <p className="text-sm mt-1">Uploaded: {file.name}</p>
-        )}
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="file">Or upload a file</Label>
+            <label
+              htmlFor="file"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-4 py-6 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+            >
+              {file ? (
+                <>
+                  <FileText className="h-4 w-4" />
+                  <span className="font-medium text-foreground">{file.name}</span>
+                  <span className="text-xs">({Math.round(file.size / 1024)} KB)</span>
+                </>
+              ) : (
+                <>
+                  <Upload className="h-4 w-4" />
+                  <span>Click to choose a PDF, DOCX, or TXT</span>
+                </>
+              )}
+              <input
+                id="file"
+                type="file"
+                accept=".pdf,.docx,.txt"
+                className="sr-only"
+                onChange={(e) => setFile(e.target.files?.[0] || null)}
+                disabled={loading}
+              />
+            </label>
+            {file && (
+              <button
+                type="button"
+                onClick={() => setFile(null)}
+                disabled={loading}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Remove file
+              </button>
+            )}
+          </div>
 
-      {/* Question count */}
-      <div className="mb-4">
-        <label className="block mb-2 font-medium">
-          Number of Questions
-        </label>
-        <select
-          value={questionCount}
-          onChange={(e) => setQuestionCount(Number(e.target.value))}
-          className="border p-2 rounded w-full"
-        >
-          {[3, 5, 10, 15, 20].map((num) => (
-            <option key={num} value={num}>
-              {num}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div className="space-y-2">
+            <Label>Number of questions</Label>
+            <div className="flex flex-wrap gap-2">
+              {QUESTION_OPTIONS.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setQuestionCount(n)}
+                  disabled={loading}
+                  className={
+                    'rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ' +
+                    (questionCount === n
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-input bg-background hover:bg-accent hover:text-accent-foreground')
+                  }
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* Button */}
-      <button
-        type="button"
-        onClick={handleGenerate}
-        disabled={loading}
-        className="bg-black text-white px-4 py-2 rounded w-full"
-      >
-        {loading ? 'Generating...' : 'Generate Quiz'}
-      </button>
+          {error && (
+            <div className="rounded-md border border-destructive/50 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </div>
+          )}
+
+          <Button
+            type="button"
+            size="lg"
+            onClick={handleGenerate}
+            disabled={!canSubmit}
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating quiz…
+              </>
+            ) : (
+              <>
+                <Sparkles className="mr-2 h-4 w-4" /> Generate Quiz
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
     </main>
   );
 }

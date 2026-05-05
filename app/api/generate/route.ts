@@ -52,7 +52,8 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const sourceText: string = body?.text ?? '';
-    const count: number = body?.count === 3 ? 3 : 1;
+    const requested = Number(body?.count ?? body?.questionCount ?? 5);
+    const count: number = Math.min(20, Math.max(1, Number.isFinite(requested) ? Math.round(requested) : 5));
 
     if (!sourceText || sourceText.length < 50) {
       return NextResponse.json(
