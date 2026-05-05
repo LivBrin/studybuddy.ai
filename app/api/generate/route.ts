@@ -6,15 +6,17 @@ export const maxDuration = 60;
 
 const MAX_CHARS = 24000; // ~6k tokens of source — keeps us well under context limits and cost
 
-const SYSTEM_PROMPT = `You are a study-aid generator. Given source material, you create study questions that test understanding of the most important factual content in the source.
+const SYSTEM_PROMPT = `You are a study-aid generator. Given a topic and/or source material, you create study questions that test understanding of the most important factual content.
 
 Rules:
 - Half multiple choice (type "mc"), half short answer (type "sa"). For odd counts, prefer one extra MC.
 - MC questions must have exactly 4 plausible options. Set correctIndex (0-3) to the correct option.
 - SA questions must have a list of acceptableAnswers (1-5 short alternative correct phrasings, lowercase).
-- Each question must be answerable from the source. Don't invent facts.
+- When source material is provided, every question must be answerable from that source — do not invent facts beyond it.
+- When no source is provided and only a topic/focus is given, use accurate, well-established facts from your general knowledge of the topic.
+- If a focus area is specified alongside source material, prioritize content that relates to the focus and skip unrelated material when possible.
 - Keep questions concise and unambiguous.
-- Always include a brief explanation citing the relevant idea from the source.`;
+- Always include a brief explanation of the correct answer.`;
 
 const schema = {
   type: 'object',
@@ -51,18 +53,32 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const sourceText: string = body?.text ?? '';
+    const sourceText: string = (body?.text ?? '').trim();
+    const focus: string = (body?.focus ?? '').trim();
     const requested = Number(body?.count ?? body?.questionCount ?? 5);
     const count: number = Math.min(20, Math.max(1, Number.isFinite(requested) ? Math.round(requested) : 5));
 
-    if (!sourceText || sourceText.length < 50) {
+    if (!sourceText && !focus) {
       return NextResponse.json(
-        { error: 'Source text is too short to generate questions from.' },
+        { error: 'Provide a focus area or upload source material.' },
         { status: 400 }
       );
     }
 
     const trimmed = sourceText.length > MAX_CHARS ? sourceText.slice(0, MAX_CHARS) : sourceText;
+    const plural = count === 1 ? '' : 's';
+
+    let userMessage: string;
+    if (trimmed) {
+      const focusLine = focus
+        ? `\nFocus the questions specifically on: "${focus}". Prefer source content that relates to this focus, and skip unrelated material when possible.\n`
+        : '';
+      userMessage =
+        `Generate exactly ${count} study question${plural} from the source material below. Mix multiple choice and short answer when count > 1.\n${focusLine}\n--- SOURCE ---\n${trimmed}\n--- END SOURCE ---`;
+    } else {
+      userMessage =
+        `Generate exactly ${count} study question${plural} on the following topic: "${focus}". Use accurate, well-established facts from your general knowledge of the subject. Mix multiple choice and short answer when count > 1.`;
+    }
 
     const openai = new OpenAI({ apiKey });
 
@@ -71,10 +87,7 @@ export async function POST(req: NextRequest) {
       temperature: 0.4,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        {
-          role: 'user',
-          content: `Generate exactly ${count} study question${count === 1 ? '' : 's'} from the following source material. Mix multiple choice and short answer when count > 1.\n\n--- SOURCE ---\n${trimmed}\n--- END SOURCE ---`,
-        },
+        { role: 'user', content: userMessage },
       ],
       response_format: {
         type: 'json_schema',

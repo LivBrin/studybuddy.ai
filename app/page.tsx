@@ -14,7 +14,7 @@ const QUESTION_OPTIONS = [3, 5, 10, 15, 20];
 
 export default function Home() {
   const router = useRouter();
-  const [text, setText] = useState('');
+  const [focus, setFocus] = useState('');
   const [file, setFile] = useState<File | null>(null);
   const [questionCount, setQuestionCount] = useState(5);
   const [loading, setLoading] = useState(false);
@@ -25,7 +25,8 @@ export default function Home() {
     setLoading(true);
 
     try {
-      let finalText = text;
+      let sourceText = '';
+      const focusTrimmed = focus.trim();
 
       if (file) {
         const formData = new FormData();
@@ -34,18 +35,18 @@ export default function Home() {
         const extractRes = await fetch('/api/extract', { method: 'POST', body: formData });
         const extractData = await extractRes.json();
         if (!extractRes.ok) throw new Error(extractData.error || 'Failed to extract file');
-        finalText = extractData.text;
+        sourceText = extractData.text ?? '';
       }
 
-      if (!finalText.trim()) {
-        setError('oops! please add some notes or a file first ♡');
+      if (!sourceText && !focusTrimmed) {
+        setError('oops! please add a focus area or upload a file first ♡');
         return;
       }
 
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: finalText, count: questionCount }),
+        body: JSON.stringify({ text: sourceText, focus: focusTrimmed, count: questionCount }),
       });
 
       const data = await res.json();
@@ -71,7 +72,7 @@ export default function Home() {
     }
   }
 
-  const canSubmit = !loading && (text.trim().length > 0 || !!file);
+  const canSubmit = !loading && (focus.trim().length > 0 || !!file);
 
   return (
     <main className="container max-w-2xl py-12">
@@ -100,13 +101,13 @@ export default function Home() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="notes">your notes ♡</Label>
+            <Label htmlFor="focus">focus areas of study 💗</Label>
             <Textarea
-              id="notes"
-              rows={8}
-              placeholder="paste your notes, lecture transcript, or anything you wanna study ♡"
-              value={text}
-              onChange={(e) => setText(e.target.value)}
+              id="focus"
+              rows={5}
+              placeholder="what do you wanna focus on? e.g., heart valves, the french revolution, photosynthesis ✨"
+              value={focus}
+              onChange={(e) => setFocus(e.target.value)}
               disabled={loading}
             />
           </div>
