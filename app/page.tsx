@@ -83,8 +83,11 @@ export default function Home() {
         <h1 className="text-5xl font-bold tracking-tight text-foreground">
           StudyBuddy <span className="text-primary">♡</span>
         </h1>
+        <p className="font-script text-2xl text-primary/80 mt-1 leading-none">
+          by liv brinberg
+        </p>
         <p className="text-muted-foreground mt-3 text-base">
-          drop in your notes & we&apos;ll whip up a cute lil&apos; quiz just for you ✨
+          drop in your notes & we&apos;ll whip up a cute quiz just for you ✨
         </p>
       </header>
 

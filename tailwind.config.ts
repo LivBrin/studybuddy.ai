@@ -12,6 +12,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-quicksand)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        script: ['var(--font-parisienne)', 'cursive'],
       },
       colors: {
         border: 'hsl(var(--border))',

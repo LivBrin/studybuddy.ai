@@ -1,11 +1,17 @@
 import type { Metadata } from 'next';
-import { Quicksand } from 'next/font/google';
+import { Quicksand, Parisienne } from 'next/font/google';
 import './globals.css';
 
 const quicksand = Quicksand({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-quicksand',
+});
+
+const parisienne = Parisienne({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-parisienne',
 });
 
 export const metadata: Metadata = {
@@ -15,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={quicksand.variable}>
+    <html lang="en" className={`${quicksand.variable} ${parisienne.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">{children}</body>
     </html>
   );
