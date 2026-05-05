@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+  const [questionCount, setQuestionCount] = useState(5);
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -56,6 +57,7 @@ export default function HomePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, count: Number(count) }),
+        questionCount,
       });
       const j2 = await r2.json();
       if (!r2.ok) throw new Error(j2.error ?? 'Failed to generate questions');
@@ -188,4 +190,12 @@ export default function HomePage() {
       </section>
     </main>
   );
+        <div className="mt-4">
+          <label className="block mb-2">Number of Questions</label>
+          <select value={questionCount} onChange={(e)=>setQuestionCount(Number(e.target.value))} className="border p-2 rounded">
+            {[3,5,10,15,20].map(num=>(
+              <option key={num} value={num}>{num}</option>
+            ))}
+          </select>
+        </div>
 }
