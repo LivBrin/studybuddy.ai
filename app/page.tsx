@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Upload, FileText, Loader2 } from 'lucide-react';
+import { Sparkles, Heart, Wand2, FileText, Loader2 } from 'lucide-react';
 import { setCurrent } from '@/lib/storage';
 import type { Quiz } from '@/lib/types';
 
@@ -38,7 +38,7 @@ export default function Home() {
       }
 
       if (!finalText.trim()) {
-        setError('Please paste some text or upload a file.');
+        setError('oops! please add some notes or a file first ♡');
         return;
       }
 
@@ -76,27 +76,32 @@ export default function Home() {
   return (
     <main className="container max-w-2xl py-12">
       <header className="mb-8 text-center">
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary mb-4">
-          <Sparkles className="h-3.5 w-3.5" /> AI-powered study quizzes
+        <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-4 py-1.5 text-xs font-semibold text-primary mb-4 shadow-sm">
+          <Heart className="h-3.5 w-3.5 fill-current" /> your tiny study bestie
+          <Sparkles className="h-3.5 w-3.5" />
         </div>
-        <h1 className="text-4xl font-bold tracking-tight">StudyBuddy</h1>
-        <p className="text-muted-foreground mt-2">
-          Drop in your notes or a document, and we&apos;ll quiz you on it.
+        <h1 className="text-5xl font-bold tracking-tight text-foreground">
+          StudyBuddy <span className="text-primary">♡</span>
+        </h1>
+        <p className="text-muted-foreground mt-3 text-base">
+          drop in your notes & we&apos;ll whip up a cute lil&apos; quiz just for you ✨
         </p>
       </header>
 
-      <Card>
+      <Card className="shadow-md shadow-primary/5">
         <CardHeader>
-          <CardTitle>Create a quiz</CardTitle>
-          <CardDescription>Paste your notes or upload a PDF, DOCX, or TXT file.</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Wand2 className="h-5 w-5 text-primary" /> make a new quiz
+          </CardTitle>
+          <CardDescription>paste some notes or pop in a file — we&apos;ll do the rest ♡</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="notes">Your notes</Label>
+            <Label htmlFor="notes">your notes ♡</Label>
             <Textarea
               id="notes"
               rows={8}
-              placeholder="Paste your notes, lecture transcript, or any source material here…"
+              placeholder="paste your notes, lecture transcript, or anything you wanna study ♡"
               value={text}
               onChange={(e) => setText(e.target.value)}
               disabled={loading}
@@ -104,21 +109,21 @@ export default function Home() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="file">Or upload a file</Label>
+            <Label htmlFor="file">or drop in a file</Label>
             <label
               htmlFor="file"
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed border-input bg-background px-4 py-6 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-primary/30 bg-secondary/40 px-4 py-7 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:border-primary/60 transition-all"
             >
               {file ? (
                 <>
-                  <FileText className="h-4 w-4" />
+                  <FileText className="h-4 w-4 text-primary" />
                   <span className="font-medium text-foreground">{file.name}</span>
                   <span className="text-xs">({Math.round(file.size / 1024)} KB)</span>
                 </>
               ) : (
                 <>
-                  <Upload className="h-4 w-4" />
-                  <span>Click to choose a PDF, DOCX, or TXT</span>
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span>click to add a PDF, DOCX, or TXT ♡</span>
                 </>
               )}
               <input
@@ -137,13 +142,13 @@ export default function Home() {
                 disabled={loading}
                 className="text-xs text-muted-foreground hover:text-foreground underline"
               >
-                Remove file
+                remove file
               </button>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label>Number of questions</Label>
+            <Label>how many questions?</Label>
             <div className="flex flex-wrap gap-2">
               {QUESTION_OPTIONS.map((n) => (
                 <button
@@ -152,10 +157,10 @@ export default function Home() {
                   onClick={() => setQuestionCount(n)}
                   disabled={loading}
                   className={
-                    'rounded-md border px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50 ' +
+                    'rounded-full border-2 px-5 py-2 text-sm font-semibold transition-all disabled:opacity-50 ' +
                     (questionCount === n
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-input bg-background hover:bg-accent hover:text-accent-foreground')
+                      ? 'bg-primary text-primary-foreground border-primary shadow-md shadow-primary/30 scale-105'
+                      : 'border-primary/20 bg-card hover:bg-accent hover:border-primary/40')
                   }
                 >
                   {n}
@@ -175,15 +180,15 @@ export default function Home() {
             size="lg"
             onClick={handleGenerate}
             disabled={!canSubmit}
-            className="w-full"
+            className="w-full text-base font-semibold shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 transition-all"
           >
             {loading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Generating quiz…
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" /> cooking up your quiz…
               </>
             ) : (
               <>
-                <Sparkles className="mr-2 h-4 w-4" /> Generate Quiz
+                <Wand2 className="mr-2 h-5 w-5" /> make my quiz ✨
               </>
             )}
           </Button>

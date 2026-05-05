@@ -83,9 +83,9 @@ export default function QuizPage() {
     <main className="container max-w-3xl py-12">
       <button
         onClick={handleNew}
-        className="text-sm text-muted-foreground hover:text-foreground mb-6 inline-flex items-center gap-1"
+        className="text-sm text-muted-foreground hover:text-primary mb-6 inline-flex items-center gap-1 transition-colors"
       >
-        <ArrowLeft className="h-4 w-4" /> Back
+        <ArrowLeft className="h-4 w-4" /> back to home
       </button>
 
       <header className="mb-6">
@@ -96,12 +96,12 @@ export default function QuizPage() {
       </header>
 
       {submitted && typeof quiz.score === 'number' && (
-        <Card className="mb-6 border-primary">
+        <Card className="mb-6 border-primary border-2 shadow-lg shadow-primary/20">
           <CardHeader>
-            <CardTitle>Score: {Math.round(quiz.score * 100)}%</CardTitle>
+            <CardTitle className="text-primary">your score: {Math.round(quiz.score * 100)}% ♡</CardTitle>
             <CardDescription>
-              {quiz.questions.filter((q, i) => gradeQuestion(q, answers[i])).length} of{' '}
-              {quiz.questions.length} correct. Review your answers below.
+              you got {quiz.questions.filter((q, i) => gradeQuestion(q, answers[i])).length} of{' '}
+              {quiz.questions.length} correct ✨ review your answers below
             </CardDescription>
           </CardHeader>
         </Card>
@@ -190,11 +190,22 @@ export default function QuizPage() {
 
       <div className="mt-6 flex gap-3">
         {!submitted ? (
-          <Button onClick={handleSubmit} disabled={!allAnswered}>
-            Submit
+          <Button
+            onClick={handleSubmit}
+            disabled={!allAnswered}
+            size="lg"
+            className="font-semibold shadow-md shadow-primary/30"
+          >
+            submit ✨
           </Button>
         ) : (
-          <Button onClick={handleNew}>New quiz</Button>
+          <Button
+            onClick={handleNew}
+            size="lg"
+            className="font-semibold shadow-md shadow-primary/30"
+          >
+            make another quiz ♡
+          </Button>
         )}
       </div>
     </main>
