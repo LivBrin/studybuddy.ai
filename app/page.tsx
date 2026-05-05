@@ -88,7 +88,7 @@ export default function Home() {
           by liv brinberg
         </p>
         <p className="text-muted-foreground mt-3 text-base">
-          drop in your notes & we&apos;ll whip up a cute quiz just for you ✨
+          drop in your notes & I can whip up a cute quiz just for you ✨
         </p>
       </header>
 
@@ -97,7 +97,7 @@ export default function Home() {
           <CardTitle className="flex items-center gap-2">
             <Wand2 className="h-5 w-5 text-primary" /> make a new quiz
           </CardTitle>
-          <CardDescription>paste some notes or pop in a file — we&apos;ll do the rest ♡</CardDescription>
+          <CardDescription>paste some notes or pop in a file — I can do the rest ♡</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
